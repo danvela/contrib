@@ -70,7 +70,20 @@ int http_request(const char * method, const char* endpoint, char *req_body, json
 	if (strlen(flag_opa_sock) > 0) {
 		curl_easy_setopt(curl_handle, CURLOPT_UNIX_SOCKET_PATH, flag_opa_sock);
 	}
+	
+			
+        // Set headers.
+        struct curl_slist *headers = NULL;
+        // The request body is JSON.
+        headers = curl_slist_append(headers, "Content-Type: application/json");
+        // The response body can be JSON.
+        headers = curl_slist_append(headers, "Accept: application/json");
+        // Set header barer token flag from PAM file
+        headers = curl_slist_append(headers, strcat(strcpy(header_auth, "Authorization: Bearer "),flag_opa_urltoken));
+	
+	
 	curl_easy_setopt(curl_handle, CURLOPT_URL, join_url(url, flag_opa_url, endpoint));
+	curl_easy_setopt(curl_handle, CURLOPT_HTTPHEADER, headers);
 	curl_easy_setopt(curl_handle, CURLOPT_CUSTOMREQUEST, method);
 	curl_easy_setopt(curl_handle, CURLOPT_NOPROGRESS, 1);
 	curl_easy_setopt(curl_handle, CURLOPT_FAILONERROR, 1);
@@ -80,13 +93,6 @@ int http_request(const char * method, const char* endpoint, char *req_body, json
 	struct curl_data resp_data;
 	resp_data.payload = (char *) malloc(1); // This will be realloced by libcurl.
 	resp_data.size = 0;                     // Start with an empty payload.
-
-	// Set headers.
-	struct curl_slist *headers = NULL;
-	// The request body is JSON.
-	headers = curl_slist_append(headers, "Content-Type: application/json");
-	// The response body can be JSON.
-	headers = curl_slist_append(headers, "Accept: application/json");
 
 	// Set the request body JSON.
 	// This has the side effect of setting request headers to default, undesired values.
